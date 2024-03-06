@@ -34,8 +34,6 @@ using Platform = Autodesk.AutoCAD;
     using PlatformDb = Autodesk.AutoCAD;
 #endif
 
-[assembly: ExtensionApplication(typeof(Useful_FunctionsCsh.MyPlugin))]
-
 namespace Useful_FunctionsCsh
 {
     internal class MyPlugin : IExtensionApplication
