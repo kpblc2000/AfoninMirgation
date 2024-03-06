@@ -1,4 +1,6 @@
-﻿#if NCAD
+﻿
+using Infrastructure;
+#if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
@@ -25,7 +27,10 @@ namespace UsefulFunctionsNCad23.CadCommands
 
             BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
             BlockTableRecord acBlkTblRec;
-            PromptEntityResult result = select_Entity(typeof(Polyline), "Выберите полилинию, на вершинах которой надо создать точки\n");
+
+            CommonMethods methods = new CommonMethods();
+
+            PromptEntityResult result = methods.select_Entity(typeof(Polyline), "Выберите полилинию, на вершинах которой надо создать точки\n");
             if (result != null)
             {
                 using (Transaction Trans = db.TransactionManager.StartTransaction())
@@ -84,7 +89,8 @@ namespace UsefulFunctionsNCad23.CadCommands
                             return;
                         }
                         SelectionSet FaceSel = resultFace.Value;
-                        create_point_onFace(anyPoint, FaceSel);
+                        
+                        methods.create_point_onFace(anyPoint, FaceSel, db);
                     }
                     Trans.Commit();
                     docklock.Dispose();

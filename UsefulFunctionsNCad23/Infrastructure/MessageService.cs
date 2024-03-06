@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 
-namespace UsefulFunctionsNCad23.Infrastructure
+namespace Infrastructure
 {
     public class MessageService
     {
@@ -37,7 +37,13 @@ namespace UsefulFunctionsNCad23.Infrastructure
 
         public void ExceptionMessage(Exception ex, [CallerMemberName] string CallMethod = null)
         {
-            MessageBox.Show((string.IsNullOrWhiteSpace(CallMethod) ? "" : $"{CallMethod} : ") + Message,
+            MessageBox.Show("\n" + (string.IsNullOrWhiteSpace(CallMethod) ? "" : $"{CallMethod} : ") + ex.Message,
+                "Системная ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        public void ExceptionMessage(string Message, Exception ex, [CallerMemberName] string CallMethod = null)
+        {
+            MessageBox.Show(
+                "\n" + (string.IsNullOrWhiteSpace(CallMethod) ? "" : $"{CallMethod} : ") + Message + "\n" + ex.Message,
                 "Системная ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }

@@ -1,4 +1,6 @@
 ﻿
+
+using Infrastructure;
 #if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
@@ -66,7 +68,10 @@ namespace UsefulFunctionsNCad23.CadCommands
                     case "Autodesk.AutoCAD.DatabaseServices.Polyline3d":
 #endif
                         Polyline3d MyPl3d = Trans.GetObject(ent.ObjectId, OpenMode.ForWrite) as Polyline3d;
-                        double lomanaya = Vychisli_LomDlinu(MyPl3d, myPoint, zeroPoint);
+
+                        CommonMethods methods = new CommonMethods();
+
+                        double lomanaya = methods.Vychisli_LomDlinu(MyPl3d, myPoint, zeroPoint);
                         ed.WriteMessage($"\nДлина ломаной по полилинии между точками составила {lomanaya}");
                         break;
 #if NCAD
@@ -75,7 +80,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                     case "Autodesk.AutoCAD.DatabaseServices.Polyline":
 #endif
                         Polyline MyPoly = Trans.GetObject(ent.ObjectId, OpenMode.ForWrite) as Polyline;
-                        double lomanaya2 = MyCommonFunctions.Vychisli_LomDlinu_Poly(MyPoly, myPoint, zeroPoint);
+                        CommonMethods methods2 = new CommonMethods();
+
+                        double lomanaya2 = methods2.Vychisli_LomDlinu_Poly(MyPoly, myPoint, zeroPoint);
                         ed.WriteMessage($"\nДлина ломаной по полилинии между точками составила {lomanaya2}");
                         break;
                 }

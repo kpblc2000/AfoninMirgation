@@ -135,6 +135,9 @@
     <Compile Include="..\UsefulFunctionsNCad23\CadCommands\test_Type_EntityCmd.cs">
       <Link>CadCommands\test_Type_EntityCmd.cs</Link>
     </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\Infrastructure\CommonMethods.cs">
+      <Link>Infrastructure\CommonMethods.cs</Link>
+    </Compile>
     <Compile Include="..\UsefulFunctionsNCad23\Infrastructure\MessageService.cs">
       <Link>Infrastructure\MessageService.cs</Link>
     </Compile>

@@ -1,4 +1,6 @@
-﻿#if NCAD
+﻿
+using Infrastructure;
+#if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
@@ -52,8 +54,13 @@ namespace UsefulFunctionsNCad23.CadCommands
             using (Transaction Trans = db.TransactionManager.StartTransaction())
             {
                 Polyline3d MyPl3d = Trans.GetObject(myLineResult.ObjectId, OpenMode.ForWrite) as Polyline3d;
-                double lomanaya = Vychisli_LomDlinu(MyPl3d, myPoint, zeroPoint);
-                ed.WriteMessage($"\nДлина ломаной по полилинии между точками составила {lomanaya}");
+
+                CommonMethods methods = new CommonMethods();
+
+                double lomanaya = methods.Vychisli_LomDlinu(MyPl3d, myPoint, zeroPoint);
+
+                MessageService msgService = new MessageService();
+                msgService.ConsoleMessage($"Длина ломаной по полилинии между точками составила {lomanaya}");
                 Trans.Commit();
             }
         }

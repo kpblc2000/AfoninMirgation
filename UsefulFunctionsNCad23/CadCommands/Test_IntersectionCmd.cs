@@ -1,4 +1,6 @@
-﻿#if NCAD
+﻿
+using Infrastructure;
+#if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
@@ -62,6 +64,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                                 //пока для проверки создаем вспомогательное сообщение
                                 //   ed.WriteMessage($"Выбрана секущая полилиния с Id {polyline_Cutting.ObjectId} количеством вершин {polyline_Cutting.NumberOfVertices};\n");
 
+
+                                CommonMethods methods = new CommonMethods();
+
                                 foreach (SelectedObject sObj in intersectedSel) //перебираем каждый выбранный объект (пересекаемую линию)
                                 {
                                     Polyline polyline_Intersected = (Polyline)Trans.GetObject(sObj.ObjectId, OpenMode.ForRead, false, true);
@@ -71,7 +76,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                         //то ищем точки пересечения секущей и пересекаемой линий
                                         //пока для проверки создаем вспомогательное сообщение
                                         //  ed.WriteMessage($"Анализируем пересекаемую полилинию с Id {polyline_Intersected.ObjectId} количеством вершин {polyline_Intersected.NumberOfVertices};\n");
-                                        added_Vertex_Polyline(polyline_Cutting, polyline_Intersected);
+                                        methods.added_Vertex_Polyline(polyline_Cutting, polyline_Intersected);
                                         //  ed.WriteMessage($"Функция \"added_Vertex_Polyline\" вроде отработала успешно\n");
 
                                     }

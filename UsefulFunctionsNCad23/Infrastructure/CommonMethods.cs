@@ -2,8 +2,6 @@
 using System;
 using HostMgd.ApplicationServices;
 
-using System.Windows.Controls;
-
 #if NCAD
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
@@ -11,13 +9,13 @@ using Teigha.Geometry;
 #elif ACAD
 #endif
 
-namespace UsefulFunctionsNCad23.Infrastructure
+namespace Infrastructure
 {
-    internal class CommonMethods
+    public class CommonMethods
     {
-        public string SdelayOpisanieTochkiPopera_3(Entity popent, Transaction Trans)
+        public string SdelayOpisanieTochkiPopera_3(Entity popent, Transaction Trans, Editor ed, Database db)
         {
-            String OpisanieTochkiPopera = ProveritNalichiePodpisi(popent);
+            String OpisanieTochkiPopera = ProveritNalichiePodpisi(popent, ed, db);
             //проверяем, не заданы ли заранее подписи. Если заданы - то должно сразу на Return,
             //если не заданы - то идет их создание "по-умолчанию"
             if (OpisanieTochkiPopera == "подпись не задана" || OpisanieTochkiPopera == "Подписей поперечников не существует")
@@ -718,7 +716,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
 
         } //end function
 
-        public String ProveritNalichiePodpisi(Entity popent)
+        public String ProveritNalichiePodpisi(Entity popent, Editor ed, Database db, MessageService MsgService)
         {
             String PodpisString = "подпись не задана";
             //задаем слой, в котором будут располагаться подписи поперечников ("подписи поперечников").
@@ -752,44 +750,48 @@ namespace UsefulFunctionsNCad23.Infrastructure
                             {
                                 foreach (SelectedObject PodpisObj in PodpisSel)
                                 {
-                                    DBText ProverkaText = Trans.GetObject(PodpisObj.ObjectId, OpenMode.ForRead) as DBText;
-                                    if (ProverkaText.Position.X == ProverkaLine.StartPoint.X & ProverkaText.Position.Y == ProverkaLine.StartPoint.Y)
+                                    DBText ProverkaText =
+                                        Trans.GetObject(PodpisObj.ObjectId, OpenMode.ForRead) as DBText;
+                                    if (ProverkaText.Position.X == ProverkaLine.StartPoint.X &
+                                        ProverkaText.Position.Y == ProverkaLine.StartPoint.Y)
                                     {
                                         PodpisString = ProverkaText.TextString;
                                     } //End If
+
                                     ProverkaText.Dispose();
                                 } //Next
                             } //end using
+
                             break;
 #if NCAD
                         case "Teigha.DatabaseServices.Polyline":
 #else
                         case "Autodesk.AutoCAD.DatabaseServices.Polyline":
 #endif
-                            using (Polyline ProverkaPolyLine = Trans.GetObject(popent.ObjectId, OpenMode.ForRead) as Polyline)
+                            using (Polyline ProverkaPolyLine =
+                                   Trans.GetObject(popent.ObjectId, OpenMode.ForRead) as Polyline)
                             {
                                 foreach (SelectedObject PodpisObj in PodpisSel)
                                 {
-                                    DBText ProverkaText = Trans.GetObject(PodpisObj.ObjectId, OpenMode.ForRead) as DBText;
-                                    if (ProverkaText.Position.X == ProverkaPolyLine.StartPoint.X & ProverkaText.Position.Y == ProverkaPolyLine.StartPoint.Y)
+                                    DBText ProverkaText =
+                                        Trans.GetObject(PodpisObj.ObjectId, OpenMode.ForRead) as DBText;
+                                    if (ProverkaText.Position.X == ProverkaPolyLine.StartPoint.X &
+                                        ProverkaText.Position.Y == ProverkaPolyLine.StartPoint.Y)
                                     {
                                         PodpisString = ProverkaText.TextString;
                                     } //End If
+
                                     ProverkaText.Dispose();
                                 } //Next
                             } //end using
+
                             break;
                     } //End Select
                 }
-#if NCAD
-                catch (Teigha.Runtime.Exception ex)
-#else
-                catch (Autodesk.AutoCAD.Runtime.Exception ex )
-#endif
+                catch (Exception ex)
                 {
-                    PodpisString = "В процессе поиска подписи поперечника произошла ошибка: " + ex.Message;
-                    ed.WriteMessage(PodpisString);
-                } //End Try
+                    MsgService.ExceptionMessage(ex, "В процессе поиска подписи поперечника произошла ошибка");
+                }
             }//end using
             return PodpisString;
         } //end function
@@ -804,7 +806,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
             return S1;
         }// End Function
 
-        public void create_point_onFace(Point3d anyPoint3D, SelectionSet FaceSel)
+        public void create_point_onFace(Point3d anyPoint3D, SelectionSet FaceSel, Database db, MessageService MsgService)
         {
             BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
             BlockTableRecord acBlkTblRec;
@@ -838,7 +840,10 @@ namespace UsefulFunctionsNCad23.Infrastructure
 
                                     double dH = Vychisli_Z(line_rebro.StartPoint, anyPoint3D, line_rebro.EndPoint);
                                     point3D = new Point3d(anyPoint3D.X, anyPoint3D.Y, line_rebro.StartPoint.Z + dH);
-                                    if (point3D == null) ed.WriteMessage("Не сработал метод Vychisli_Z\n");
+                                    if (point3D == null)
+                                    {
+                                        MsgService.ConsoleMessage("Не сработал метод Vychisli_Z");
+                                    }
                                     line_rebro.Dispose();
                                     //acBlkTblRec.AppendEntity(line_rebro);
                                     //Trans.AddNewlyCreatedDBObject(line_rebro, true);
@@ -849,7 +854,10 @@ namespace UsefulFunctionsNCad23.Infrastructure
                                 else
                                 {
                                     point3D = anyPoint3D.Project(my_plane, vector_Z);
-                                    if (point3D == null) ed.WriteMessage("Не сработал метод anyPoint3D.Project\n");
+                                    if (point3D == null)
+                                    {
+                                        MsgService.ConsoleMessage("Не сработал метод anyPoint3D.Project");
+                                    }
                                     // ed.WriteMessage($"Точка создана на грани, отметка {anyPoint3D.Z} \n");
                                     // anyFace.UpgradeOpen();
                                     //anyFace.ColorIndex = 1;
@@ -860,7 +868,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
                                 acBlkTblRec.AppendEntity(new_Point);
                                 Trans.AddNewlyCreatedDBObject(new_Point, true);
                                 Trans.Commit();
-                                ed.WriteMessage($"Создана точка с координатами {new_Point.Position}\n");
+                                MsgService.ConsoleMessage($"Создана точка с координатами {new_Point.Position}");
                                 my_plane.Dispose();
                                 break;
                             }
@@ -869,7 +877,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
                     // ed.WriteMessage($"Создано {count_made} точек\n");
                     if (count_made == 0)
                     {
-                        ed.WriteMessage($"Точка {anyPoint3D} не попала ни в одно ребро\n");
+                        MsgService.ConsoleMessage($"Точка {anyPoint3D} не попала ни в одно ребро");
                         Trans.Abort();
                     }
 
@@ -877,7 +885,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
             }
             else
             {
-                ed.WriteMessage("В чертеже не обнаружено 3-д граней\n");
+                MsgService.ConsoleMessage("В чертеже не обнаружено 3-д граней\n");
                 return;
             }
 
@@ -1142,6 +1150,14 @@ namespace UsefulFunctionsNCad23.Infrastructure
                 return null;
             }
 
+        }
+        public Point3d get_middle_point3D(Point3d point3D_1, Point3d point3D_2)
+        {
+            double dX = point3D_2.X - point3D_1.X;
+            double dY = point3D_2.Y - point3D_1.Y;
+            double dZ = point3D_2.Z - point3D_1.Z;
+            Point3d middle_point3D = new Point3d(point3D_1.X + 0.5 * dX, point3D_1.Y + 0.5 * dY, point3D_1.Z + 0.5 * dZ);
+            return middle_point3D;
         }
 
         private bool point_inside_face(Point3d anyPoint3D, Face anyFace)
@@ -1409,15 +1425,7 @@ namespace UsefulFunctionsNCad23.Infrastructure
             return new Point3d(anyPoint3D.X, anyPoint3D.Y, myZ);
         }
 
-        private Point3d get_middle_point3D(Point3d point3D_1, Point3d point3D_2)
-        {
-            double dX = point3D_2.X - point3D_1.X;
-            double dY = point3D_2.Y - point3D_1.Y;
-            double dZ = point3D_2.Z - point3D_1.Z;
-            Point3d middle_point3D = new Point3d(point3D_1.X + 0.5 * dX, point3D_1.Y + 0.5 * dY, point3D_1.Z + 0.5 * dZ);
-            return middle_point3D;
-        }
-
+      
         private bool is_point_in_Current_Vertex(Point3d point, Polyline polyline)
         {
             bool point_vertex = false;

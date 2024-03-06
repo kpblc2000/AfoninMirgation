@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Infrastructure;
 using Useful_FunctionsCsh;
 
 #if NCAD
@@ -131,7 +132,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                 ppo.AllowNone = false;
                                 PromptPointResult ZeroPointResult = ed.GetPoint(ppo);
                                 ZeroPoint = ZeroPointResult.Value; //пользователь задает нулевую точку отсчета на поперечника (от нее "лево" и "право")
-                                popal = MyCommonFunctions.point_is_vertex(ZeroPoint, MyPl3d, Trans);
+                                popal = point_is_vertex(ZeroPoint, MyPl3d, Trans);
                                 if (popal == false)
                                 {
                                     ed.WriteMessage("Вы не попали в вершину рабочей линии поперечника!\n");
@@ -139,6 +140,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                             } while (popal == false);
 
                             PolylineVertex3d Vert = new PolylineVertex3d();
+                            CommonMethods methods = new CommonMethods();
                             foreach (ObjectId acObjIdVert in MyPl3d) //перебираем каждую вершину 3-д полилинии,
                                                                      //это делается как ObjectId в 3-д полилинии
                             {
@@ -170,7 +172,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     } //следующий объект с кодом
                                       //!!!!!!!!!!!!Надо сделать как сумма длин сегментов ломаной линии!!!!!!!!!!______________________________________________________
                                       //RasstDoZero = Math.Round(Vychisli_S(Vert.Position, ZeroPoint), 2);
-                                    RasstDoZero = Round(Vychisli_LomDlinu(MyPl3d, Vert.Position, ZeroPoint), 2);
+                                    RasstDoZero = Math.Round(methods.Vychisli_LomDlinu(MyPl3d, Vert.Position, ZeroPoint), 2);
                                     //______________________________________________________________________________
                                     if (RasstDoZero == 0)
                                     {

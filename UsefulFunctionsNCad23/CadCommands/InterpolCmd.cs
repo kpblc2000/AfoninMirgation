@@ -1,4 +1,5 @@
 ﻿using System;
+using Infrastructure;
 
 #if NCAD
 using HostMgd.ApplicationServices;
@@ -36,22 +37,30 @@ namespace UsefulFunctionsNCad23.CadCommands
                 try
                 {
                     acBlkTbl = (BlockTable)Trans.GetObject(db.BlockTableId, OpenMode.ForRead, false, true);      //открываем для чтения класс BlockTable
-                    acBlkTblRec = Trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false, true) as BlockTableRecord;
-                    PromptEntityResult promptResult_1 = select_Entity(typeof(DBPoint), "Выберите первую точку");
+                    acBlkTblRec =
+                        Trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false, true) as
+                            BlockTableRecord;
+
+                    CommonMethods methods = new CommonMethods();
+
+                    PromptEntityResult promptResult_1 = methods.select_Entity(typeof(DBPoint), "Выберите первую точку");
                     if (promptResult_1 != null)
                     {
                         DBPoint dBPoint_1 = (DBPoint)Trans.GetObject(promptResult_1.ObjectId, OpenMode.ForRead, false);
                         point3D_1 = dBPoint_1.Position;
                         ed.WriteMessage($"Получена первая точка {dBPoint_1.Position}\n");
-                        PromptEntityResult promptResult_2 = select_Entity(typeof(DBPoint), "Выберите вторую точку");
+                        PromptEntityResult promptResult_2 =
+                            methods.select_Entity(typeof(DBPoint), "Выберите вторую точку");
                         if (promptResult_2 != null)
                         {
-                            DBPoint dBPoint_2 = (DBPoint)Trans.GetObject(promptResult_2.ObjectId, OpenMode.ForRead, false);
+                            DBPoint dBPoint_2 =
+                                (DBPoint)Trans.GetObject(promptResult_2.ObjectId, OpenMode.ForRead, false);
                             point3D_2 = dBPoint_2.Position;
                             ed.WriteMessage($"Получена вторая точка {dBPoint_2.Position}\n");
                             //Предлагаем выбрать полилинию, если пользователь откажется,
                             //то указываем вручную на экране, где создать 3-D точку
-                            PromptEntityResult promptResult_3 = select_Entity(typeof(Polyline), "Выберите полилинию, на пересечении с которой построится точка");
+                            PromptEntityResult promptResult_3 = methods.select_Entity(typeof(Polyline),
+                                "Выберите полилинию, на пересечении с которой построится точка");
                             if (promptResult_3 == null)
                             {
                                 PromptPointOptions pointOptions = new PromptPointOptions("Укажите, где Вы хотите создать точку\n");
@@ -63,7 +72,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                 if (pointResult.Status == PromptStatus.OK)
                                 {
                                     point3D_3 = pointResult.Value;
-                                    double inter_H = Vychisli_Z(point3D_1, point3D_3, point3D_2);
+                                    double inter_H = methods.Vychisli_Z(point3D_1, point3D_3, point3D_2);
                                     ed.WriteMessage($"Получено превышение {inter_H}\n");
                                     Point3d inter_Point3D = new Point3d(point3D_3.X, point3D_3.Y, point3D_1.Z + inter_H);
                                     ed.WriteMessage($"Получена искомая точка {inter_Point3D}\n");
@@ -92,14 +101,14 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     if (intersect_col.Count > 0)
                                     {
                                         point3D_3 = intersect_col[0];
-                                        double inter_H = Vychisli_Z(point3D_1, point3D_3, point3D_2);
+                                        double inter_H = methods.Vychisli_Z(point3D_1, point3D_3, point3D_2);
                                         ed.WriteMessage($"Получено превышение {inter_H}\n");
                                         Point3d inter_Point3D = new Point3d(point3D_3.X, point3D_3.Y, point3D_1.Z + inter_H);
                                         DBPoint newPoint = new DBPoint(inter_Point3D);
                                         acBlkTblRec.AppendEntity(newPoint);
                                         Trans.AddNewlyCreatedDBObject(newPoint, true);
                                         //теперь вставляем вершину в выбранную полилинию в этом месте
-                                        int insert_place = find_addvertex_index(sec_polyline, inter_Point3D);
+                                        int insert_place = find_addvertex_index(sec_polyline, inter_Point3D, methods);
                                         sec_polyline.AddVertexAt(insert_place, new Point2d(point3D_3.X, point3D_3.Y), 0, 0, 0);
                                         Trans.Commit();
                                     }
@@ -147,7 +156,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             docklock.Dispose();
         }
 
-        private static int find_addvertex_index(Polyline myPolyline, Point3d addedPoint)
+        private static int find_addvertex_index(Polyline myPolyline, Point3d addedPoint, CommonMethods Methods)
         {
             //функция возвращает индекс вершины,
             //перед которой можно вставить в полилинию проверяемую точку, чтобы она не "перекрутилась" (по порядку)
@@ -155,8 +164,8 @@ namespace UsefulFunctionsNCad23.CadCommands
             for (int i = 0; i < myPolyline.NumberOfVertices - 1; ++i)
             {
 
-                double S1 = Vychisli_S(myPolyline.GetPoint3dAt(i), myPolyline.GetPoint3dAt(i + 1));
-                double S2 = Vychisli_S(myPolyline.GetPoint3dAt(i), addedPoint);
+                double S1 = Methods.Vychisli_S(myPolyline.GetPoint3dAt(i), myPolyline.GetPoint3dAt(i + 1));
+                double S2 = Methods.Vychisli_S(myPolyline.GetPoint3dAt(i), addedPoint);
                 if (S2 <= S1)
                 {
                     numer = i + 1; break;

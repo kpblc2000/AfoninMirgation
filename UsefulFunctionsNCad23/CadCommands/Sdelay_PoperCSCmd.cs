@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using Infrastructure;
+using Useful_FunctionsCsh;
 
 
 #if NCAD
@@ -173,15 +175,17 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     //  MyLine.IntersectWith(popent, Intersect.OnBothOperands, poper3dCol, 0, 0);
                                     MyLine.IntersectWith(popent, Intersect.OnBothOperands, poper3dCol, IntPtr.Zero, IntPtr.Zero);
 
+                                    CommonMethods methods = new CommonMethods();
+
                                     for (int j = 0; j <= poper3dCol.Count - 1; j++)
                                     {
-                                        H1 = Vychisli_Z(PointInVertCol[i], poper3dCol[j], PointInVertCol[i + 1]);
+                                        H1 = methods.Vychisli_Z(PointInVertCol[i], poper3dCol[j], PointInVertCol[i + 1]);
                                         //_________________________________________создаем точку пересечения линии поперечника с характерной линией_________________________________________________________________________________
                                         Point3d PopPointWithH = new Point3d(Math.Round(poper3dCol[j].X, 2), Math.Round(poper3dCol[j].Y, 2), Math.Round(PointInVertCol[i].Z + H1, 3));
                                         //______________________________________Здесь вставляем модуль вставки в чертеж описания точки____________________________________________________________________________________
 
-                                        SozdanieKodaTochkiPopera(acBlkTblRec, PopPointWithH, popent, MyLine);
-                                        SozdaniePodpisiTochkiPopera(acBlkTblRec, PopPointWithH, popent, MyLine);
+                                        SozdanieKodaTochkiPopera(acBlkTblRec, PopPointWithH, popent, MyLine, ed, db);
+                                        SozdaniePodpisiTochkiPopera(acBlkTblRec, PopPointWithH, popent, MyLine, ed, db);
                                         //--если в настройках нажат соответствующий чекбокс, то создаем тексты с междопутьями на плане---------------
                                         if (need_MP && popent.Layer == "29")
                                         {
@@ -202,7 +206,7 @@ namespace UsefulFunctionsNCad23.CadCommands
 
                                 MyLine.Dispose();
                             } //' переходим к следующему сегменту
-                            SortCol = SortPoint3dCollection(GotovyPoper3dCol);
+                            SortCol = SortPoint3dCollection(GotovyPoper3dCol, ed, db);
                             if (need_MP)
                             {
 
@@ -214,7 +218,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     Point3dCollection ClearPointsGRcol = delete_dubles(Points_GR);
                                     ed.WriteMessage($"Из найденных в обработку междопутий ушло:{ClearPointsGRcol.Count}\n");
 
-                                    SdelayMPtexts(ClearPointsGRcol, textMP_style, textMP_height, textMP_layer);
+                                    SdelayMPtexts(ClearPointsGRcol, textMP_style, textMP_height, textMP_layer, db, ed, new CommonMethods());
                                     ed.WriteMessage($"Функция \"SdelayMPtexts\" отработала успешно\n");
                                 }
                                 else
@@ -231,15 +235,14 @@ namespace UsefulFunctionsNCad23.CadCommands
                             {
 
                                 bool hasDubls = true;
+                                CommonMethods methods = new CommonMethods();
                                 while (hasDubls)
                                 {
                                     int countDel = 0;
                                     for (int dublInd = 0; dublInd < SortCol.Count - 1; dublInd++)
                                     {
 
-                                        //for (int k = 1;k< SortCol.Count;k++)
-                                        //{
-                                        double dubleDist = Vychisli_S(SortCol[dublInd], SortCol[dublInd + 1]);
+                                        double dubleDist = methods.Vychisli_S(SortCol[dublInd], SortCol[dublInd + 1]);
 
                                         if (dubleDist < 0.01)
                                         {
@@ -291,7 +294,7 @@ namespace UsefulFunctionsNCad23.CadCommands
 
         }
 
-        private static void SozdaniePodpisiTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine)
+        private static void SozdaniePodpisiTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine, Editor ed, Database db)
         {
             // BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
             //BlockTableRecord acBlkTblRec;
@@ -320,7 +323,11 @@ namespace UsefulFunctionsNCad23.CadCommands
                         return;
                     }  //End If
                 } //Next
-            метка2: String StrOpisanie = SdelayOpisanieTochkiPopera_3(popent, Trans1);
+            метка2:
+
+                CommonMethods methods = new CommonMethods();
+
+                String StrOpisanie = methods.SdelayOpisanieTochkiPopera_3(popent, Trans1, ed, db);
                 DBText TxtOpisanie = new DBText();
                 //With TxtOpisanie
                 TxtOpisanie.TextString = StrOpisanie;
@@ -349,10 +356,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                 int countDel = 0;
                 for (int dublInd = 0; dublInd < point3DCollection_with_doubles.Count - 1; dublInd++)
                 {
-
-                    //for (int k = 1;k< SortCol.Count;k++)
-                    //{
-                    double dubleDist = Vychisli_S(point3DCollection_with_doubles[dublInd], point3DCollection_with_doubles[dublInd + 1]);
+                    CommonMethods methods = new CommonMethods();
+                    double dubleDist = methods.Vychisli_S(point3DCollection_with_doubles[dublInd],
+                        point3DCollection_with_doubles[dublInd + 1]);
 
                     if (dubleDist < 0.01)
                     {
@@ -369,7 +375,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             return point3DCollection_with_doubles;
         }
 
-        private static Point3dCollection SortPoint3dCollection(Point3dCollection GotovyPoper3dCol)
+        private static Point3dCollection SortPoint3dCollection(Point3dCollection GotovyPoper3dCol, Editor ed, Database db)
         {
             Point3dCollection SortCol = new Point3dCollection();
             int i, j;
@@ -380,9 +386,10 @@ namespace UsefulFunctionsNCad23.CadCommands
             {
                 try
                 {
+                    CommonMethods methods = new CommonMethods();
                     for (i = 0; i <= GotovyPoper3dCol.Count - 1; i++)
                     {
-                        S1 = Vychisli_S(GotovyPoper3dCol[0], GotovyPoper3dCol[i]);
+                        S1 = methods.Vychisli_S(GotovyPoper3dCol[0], GotovyPoper3dCol[i]);
                         ArrayOfDist.SetValue(S1, i);
                         ArrayOfIndex.SetValue(i, i);
                     } //Next
@@ -403,7 +410,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             return SortCol;
         } //End Function
 
-        private static void SozdanieKodaTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine)
+        private static void SozdanieKodaTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine, Editor ed, Database db)
         {
             TypedValue[] TvKod = new TypedValue[2];
             TvKod.SetValue(new TypedValue((int)(DxfCode.Start), "TEXT"), 0);
@@ -1071,7 +1078,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             return KodTochkiPopera;
         }//end function
 
-        private static void SdelayMPtexts(Point3dCollection SortPointsGRcol, string textMP_style, double textMP_height, string textMP_layer)
+        private static void SdelayMPtexts(Point3dCollection SortPointsGRcol, string textMP_style, double textMP_height, string textMP_layer, Database db, Editor ed, CommonMethods Methods)
         {
 
             //метод создает тексты междопутий. Нужный слой уже создан в базе (перед выызовом процедуры).
@@ -1090,12 +1097,12 @@ namespace UsefulFunctionsNCad23.CadCommands
                     {
                         Point3d point3D_1 = SortPointsGRcol[i];
                         Point3d point3D_2 = SortPointsGRcol[i + 1];
-                        Point3d point_ins_MPtext = get_middle_point3D(point3D_1, point3D_2);//находим среднюю точку с помощью вспомогательной функции
+                        Point3d point_ins_MPtext = Methods.get_middle_point3D(point3D_1, point3D_2);//находим среднюю точку с помощью вспомогательной функции
                         ed.WriteMessage("Функция \"get_middle_point3D\" для середины междопутья отработала  успешно\n");
                         //для создания красивого текста междопутья осталось узнать угол поворота текста и его содержимое (расстояние между точками)
                         double text_MP_angle = get_angle_90(point3D_1, point3D_2);
                         ed.WriteMessage("Функция \"get_angle_90\" отработала успешно\n");
-                        double text_MP_rasst = Vychisli_S(point3D_1, point3D_2);
+                        double text_MP_rasst = Methods.Vychisli_S(point3D_1, point3D_2);
                         string text_MP_string = text_MP_rasst.ToString("0.00", CultureInfo.InvariantCulture);//задаем содержимое правильного формата
                                                                                                              //все исходные данные известны, создаем текст в примерном положении и добавляем его в базу чертежа
                         TextStyleTable textStyleTableDoc = (TextStyleTable)Trans.GetObject(db.TextStyleTableId, OpenMode.ForRead, false, true);//открываем для чтения таблицу стилей текста
@@ -1124,7 +1131,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                         //теперь перемещаем созданный текст, чтобы он был левее линии поперечника, и его середина была посередине линии
                         Vector3d myVector = text_MP.GeometricExtents.MinPoint.GetVectorTo(text_MP.Position);
                         text_MP.TransformBy(Matrix3d.Displacement(myVector));
-                        Point3d middle_box = get_middle_point3D(text_MP.GeometricExtents.MaxPoint, text_MP.Position);
+                        Point3d middle_box = Methods.get_middle_point3D(text_MP.GeometricExtents.MaxPoint, text_MP.Position);
                         myVector = middle_box.GetVectorTo(text_MP.Position);
                         text_MP.TransformBy(Matrix3d.Displacement(myVector));
 

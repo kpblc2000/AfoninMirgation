@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
+using Infrastructure;
+
 
 #if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
 using Teigha.Runtime;
+using Teigha.Geometry;
 #elif ACAD
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -82,7 +85,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     if ((polyline_Intersected != null))
                                     {
                                         if ((polyline_Intersected.Layer == "25" || polyline_Intersected.Layer == "Откосы" || polyline_Intersected.Layer == "12_Рельеф") && (polyline_Intersected.NumberOfVertices < 3)) continue;
-                                        added_Vertex_Polyline(polyline_Cutting, polyline_Intersected);
+
+                                        CommonMethods methods = new CommonMethods();
+                                        methods.added_Vertex_Polyline(polyline_Cutting, polyline_Intersected);
                                         //  ed.WriteMessage($"Функция \"added_Vertex_Polyline\" вроде отработала успешно\n");
 
                                     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Infrastructure;
 #if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
@@ -67,18 +68,20 @@ namespace UsefulFunctionsNCad23.CadCommands
                     SelectionSet poperSel = resultPoper.Value;
                     ObjectId myObjectId = poperSel.GetObjectIds()[0];
                     Entity myEnt = (Entity)Trans.GetObject(myObjectId, OpenMode.ForWrite);
-                    String myDescription = SdelayOpisanieTochkiPopera_3(myEnt, Trans);
+
+                    CommonMethods methods = new CommonMethods();
+                    String myDescription = methods.SdelayOpisanieTochkiPopera_3(myEnt, Trans, ed, db);
                     //  ed.WriteMessage($"\nНашел описание линии:{myDescription}\n");
                     DBText opisText = new DBText();
                     Point3d opisTextInsPt = Find_FirstPoint(myEnt, Trans);
                     // ed.WriteMessage($"Координаты первой точки выбранной линии: {opisTextInsPt}\n");
                     bool ExistDescripInPoint = true;
-                    ExistDescripInPoint = ProveritNalichiePodpisiInTochka(opisTextInsPt);
+                    ExistDescripInPoint = ProveritNalichiePodpisiInTochka(opisTextInsPt, ed, db);
                     //  ed.WriteMessage($"Существует в начальной точке текущее описание: {ExistDescripInPoint}\n");
                     if (ExistDescripInPoint)
                     {
                         docklock.Dispose();
-                        ObjectId idOpisText = Find_CurDescription(opisTextInsPt, Trans);
+                        ObjectId idOpisText = Find_CurDescription(opisTextInsPt, Trans, ed);
                         DBText old_opisText = (DBText)Trans.GetObject(idOpisText, OpenMode.ForWrite);
                         ed.WriteMessage($"Найдено старое описание {old_opisText.TextString}\n");
                         //opisText.TextString= myDescription;
@@ -166,7 +169,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             throw new ArgumentOutOfRangeException();
         }
 
-        private static bool ProveritNalichiePodpisiInTochka(Point3d myPoint3d)
+        private static bool ProveritNalichiePodpisiInTochka(Point3d myPoint3d, Editor ed, Database db)
         {
             bool myBool = false;
             TypedValue[] TvOpisanie = new TypedValue[2];
@@ -183,7 +186,8 @@ namespace UsefulFunctionsNCad23.CadCommands
                     {
                         DBText TryOpisanie = Trans.GetObject(ObjOpisanie.ObjectId, OpenMode.ForRead, false, false) as DBText;
                         // ed.WriteMessage($"Сравниваются координаты текста описания: {TryOpisanie.Position}\n и точки {myPoint3d}\n");
-                        if ((Round(TryOpisanie.Position.X, 2) == Round(myPoint3d.X, 2)) & (Round(TryOpisanie.Position.Y, 2) == Round(myPoint3d.Y, 2)))
+                        if ((Math.Round(TryOpisanie.Position.X, 2) == Math.Round(myPoint3d.X, 2)) &
+                            (Math.Round(TryOpisanie.Position.Y, 2) == Math.Round(myPoint3d.Y, 2)))
                         {
                             myBool = true;
                             break;
@@ -202,7 +206,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             return myBool;
         } //End Function
         
-        private static ObjectId Find_CurDescription(Point3d myPoint, Transaction Trans)
+        private static ObjectId Find_CurDescription(Point3d myPoint, Transaction Trans, Editor ed)
         {
             ObjectId id = new ObjectId();
             //функция находит текст с текущим заданным описанием

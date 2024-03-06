@@ -1,5 +1,7 @@
 ﻿
 
+
+using Infrastructure;
 #if NCAD
 using HostMgd.ApplicationServices;
 using HostMgd.EditorInput;
@@ -23,6 +25,7 @@ namespace UsefulFunctionsNCad23.CadCommands
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
+            Database db = doc.Database;
 
             PromptPointOptions promptPointoptions = new PromptPointOptions("Укажите точку на экране, где хотите создать 3-д точку\n");
             promptPointoptions.AllowNone = false;
@@ -35,7 +38,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                 // PromptSelectionResult resultFace = ed.SelectAll(filterFace);
                 PromptSelectionResult resultFace = ed.SelectCrossingWindow(new Point3d(promptResult_1.Value.X + 100, promptResult_1.Value.Y - 100, 0), new Point3d(promptResult_1.Value.X - 100, promptResult_1.Value.Y + 100, 0), filterFace);
                 SelectionSet FaceSel = resultFace.Value;
-                create_point_onFace(promptResult_1.Value, FaceSel);
+
+                CommonMethods methods = new CommonMethods();
+                methods.create_point_onFace(promptResult_1.Value, FaceSel, db);
             }
         }
 

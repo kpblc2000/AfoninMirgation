@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using Infrastructure;
 
 #if NCAD
 using HostMgd.EditorInput;
@@ -30,6 +31,7 @@ namespace UsefulFunctionsNCad23.CadCommands
             Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
             //   Editor ed= Teigha.Editor.CommandContext.Editor;
             Database db = Application.DocumentManager.MdiActiveDocument.Database;
+            MessageService msgService = new MessageService();
 
             BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
             BlockTableRecord acBlkTblRec;
@@ -81,8 +83,6 @@ namespace UsefulFunctionsNCad23.CadCommands
                     if (textStyleTableDoc.Has(sStyleName))
                     {
                         db.Textstyle = textStyleTableDoc[sStyleName];
-
-
                     }
                     //_________________________________________________________________
 
@@ -139,7 +139,7 @@ namespace UsefulFunctionsNCad23.CadCommands
 
 
                                 double Code = Convert.ToDouble(znach[0]);
-                                double deltaX = Round(Convert.ToDouble(znach[1]), 2);//меняем знак расстояния в зависимости от "лево" или "право"
+                                double deltaX = Math.Round(Convert.ToDouble(znach[1]), 2);//меняем знак расстояния в зависимости от "лево" или "право"
                                 if (deltaX == 0)
                                 {
                                     changeZnak = false;
@@ -148,11 +148,11 @@ namespace UsefulFunctionsNCad23.CadCommands
                                 {
                                     deltaX = -deltaX;
                                 }
-                                double deltaY = Round(Convert.ToDouble(znach[2]), 2);
+                                double deltaY = Math.Round(Convert.ToDouble(znach[2]), 2);
                                 if (Code == 0 || Code == 1 || Code == 501)
                                 {
-                                    minY = Min(minY, startPoint3D.Y + deltaY * vertScaleKoef);
-                                    maxY = Max(maxY, startPoint3D.Y + deltaY * vertScaleKoef);
+                                    minY = Math.Min(minY, startPoint3D.Y + deltaY * vertScaleKoef);
+                                    maxY = Math.Max(maxY, startPoint3D.Y + deltaY * vertScaleKoef);
                                 }
 
                                 string opisanie = "";
@@ -181,7 +181,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     newOpisanie.TextString = opisanie;
                                     if (Code == 120 || Code == 121 || Code == 130 || Code == 131 || Code == 140 || Code == 141)
                                     {
-                                        String roundDist = Abs(deltaX).ToString("0.00", CultureInfo.InvariantCulture);
+                                        String roundDist = Math.Abs(deltaX).ToString("0.00", CultureInfo.InvariantCulture);
                                         newOpisanie.TextString = roundDist + " " + newOpisanie.TextString;
                                         // newOpisanie.TextString = Convert.ToString(Abs(deltaX)) + " " + newOpisanie.TextString;
                                     }
@@ -210,7 +210,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     DBText newOtmetka = new DBText();
                                     acBlkTblRec.AppendEntity(newOtmetka);
                                     Trans.AddNewlyCreatedDBObject(newOtmetka, true);
-                                    newOtmetka.TextString = Convert.ToString(Round(deltaY, 2));
+                                    newOtmetka.TextString = Convert.ToString(Math.Round(deltaY, 2));
                                     newOtmetka.TextString = deltaY.ToString("0.00", CultureInfo.InvariantCulture);
                                     if (Code == 1)
                                     {
@@ -234,7 +234,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     DBText newOtmetka = new DBText();
                                     acBlkTblRec.AppendEntity(newOtmetka);
                                     Trans.AddNewlyCreatedDBObject(newOtmetka, true);
-                                    newOtmetka.TextString = Convert.ToString(Round(deltaY, 2));
+                                    newOtmetka.TextString = Convert.ToString(Math.Round(deltaY, 2));
                                     newOtmetka.TextString = deltaY.ToString("0.00", CultureInfo.InvariantCulture);
                                     newOtmetka.Height = Convert.ToDouble(form1.textBox3.Text);
                                     newOtmetka.Rotation = 1.5708;
@@ -265,7 +265,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     DBText newRasst = new DBText();
                                     acBlkTblRec.AppendEntity(newRasst);
                                     Trans.AddNewlyCreatedDBObject(newRasst, true);
-                                    newRasst.TextString = Convert.ToString(Round(deltaX, 2));
+                                    newRasst.TextString = Convert.ToString(Math.Round(deltaX, 2));
 
                                     newRasst.Height = Convert.ToDouble(form1.textBox3.Text);
                                     newRasst.Rotation = 1.5708;
@@ -281,7 +281,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                                     DBText newRasst = new DBText();
                                     acBlkTblRec.AppendEntity(newRasst);
                                     Trans.AddNewlyCreatedDBObject(newRasst, true);
-                                    newRasst.TextString = Convert.ToString(Round(deltaX, 2));
+                                    newRasst.TextString = Convert.ToString(Math.Round(deltaX, 2));
 
                                     newRasst.Height = Convert.ToDouble(form1.textBox3.Text);
                                     newRasst.Rotation = 1.5708;
@@ -318,24 +318,14 @@ namespace UsefulFunctionsNCad23.CadCommands
 
                     //ed.WriteMessage($"Вычислено значение переменной MinY={minY}\n");
                     // ed.WriteMessage($"Установлено значение MinY: {minY};\n начальная точки по Х: {profLine.StartPoint.X}\n");
-                    ChertiPoper(profLine, minY, maxY, colIdOpisanie, colIdOtmetki, colIdRasst, colIdCodes, Trans, acBlkTblRec, horizScaleKoef, vertScaleKoef, colIdPodzemkaRasst, colIdPodzemkaAbsolut, colIdRasstIsso, db.Textstyle, poperCaption, startPoint3D);
+                    ChertiPoper(profLine, minY, maxY, colIdOpisanie, colIdOtmetki, colIdRasst, colIdCodes, Trans, acBlkTblRec, horizScaleKoef, vertScaleKoef, colIdPodzemkaRasst, colIdPodzemkaAbsolut, colIdRasstIsso, db.Textstyle, poperCaption, startPoint3D, msgService);
                     // ed.WriteMessage($"\nДлина коллекции с описаниями ={colIdOpisanie.Count}\n, длина массива с отметками = {colIdOtmetki.Count}\n, длина массива с расстояниями {colIdRasst.Count}\n, длина массива с кодами {colIdCodes.Count}\n");
                     Trans.Commit();
                     // docklock.Dispose();
                 }
-#if NCAD
-                catch (Teigha.Runtime.Exception ex)
-#else
-                catch (Autodesk.AutoCAD.Runtime.Exception ex)
-
-#endif
-                {
-                    ed.WriteMessage($"В процессе считывания данных поперечника возникла ошибка: \n{ex}");
-                    Trans.Abort();
-                }
                 catch (System.Exception ex1)
                 {
-                    ed.WriteMessage($"В процессе считывания данных поперечника возникла ошибка: \n{ex1}");
+                    msgService.ExceptionMessage(ex1, $"В процессе считывания данных поперечника возникла ошибка");
                     Trans.Abort();
                 }
             }
@@ -344,7 +334,7 @@ namespace UsefulFunctionsNCad23.CadCommands
 
         }
 
-        private static void ChertiPoper(Polyline poperLine, double minY, double maxY, ObjectIdCollection colIdOpisanie, ObjectIdCollection colIdOtmetki, ObjectIdCollection colIdRasst, ObjectIdCollection colIdCodes, Transaction Trans, BlockTableRecord acBlkTblRec, double horizScaleKoef, double vertScaleKoef, ObjectIdCollection colIdPodzemkaRasst, ObjectIdCollection colIdPodzemkaAbsolut, ObjectIdCollection colIdRasstIsso, ObjectId CurTextstyle, string poperCaption, Point3d startPoint3D)
+        private static void ChertiPoper(Polyline poperLine, double minY, double maxY, ObjectIdCollection colIdOpisanie, ObjectIdCollection colIdOtmetki, ObjectIdCollection colIdRasst, ObjectIdCollection colIdCodes, Transaction Trans, BlockTableRecord acBlkTblRec, double horizScaleKoef, double vertScaleKoef, ObjectIdCollection colIdPodzemkaRasst, ObjectIdCollection colIdPodzemkaAbsolut, ObjectIdCollection colIdRasstIsso, ObjectId CurTextstyle, string poperCaption, Point3d startPoint3D, MessageService msgService)
         {
             ObjectIdCollection shrixiPutey = new ObjectIdCollection();
             ObjectIdCollection txtCodePut = new ObjectIdCollection();
@@ -446,9 +436,9 @@ namespace UsefulFunctionsNCad23.CadCommands
             {
                 DBText myDistTxt1 = (DBText)Trans.GetObject(colIdRasst[i], OpenMode.ForWrite);
                 DBText myDistTxt2 = (DBText)Trans.GetObject(colIdRasst[i + 1], OpenMode.ForWrite);
-                double isxD1 = Round(Convert.ToDouble(myDistTxt1.TextString), 2);
-                double isxD2 = Round(Convert.ToDouble(myDistTxt2.TextString), 2);
-                double myDist = Round(Abs(isxD1 - isxD2), 2);
+                double isxD1 = Math.Round(Convert.ToDouble(myDistTxt1.TextString), 2);
+                double isxD2 = Math.Round(Convert.ToDouble(myDistTxt2.TextString), 2);
+                double myDist = Math.Round(Math.Abs(isxD1 - isxD2), 2);
                 if (myDist > 0)//-------делаем так, чтобы не было расстояний 0.00------------------------------------------------
                 {
                     DBText myDistTxt = new DBText();
@@ -512,7 +502,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                         }
                         else
                         {
-                            ed.WriteMessage($"\n Не нашлось пересечения для точки с кодом {myCodeTxt.TextString} \n");
+                            msgService.ConsoleMessage($"Не нашлось пересечения для точки с кодом {myCodeTxt.TextString} \n");
                             // break;
                         }
 
@@ -1263,6 +1253,9 @@ namespace UsefulFunctionsNCad23.CadCommands
             //---------для каждого кода пути "1" рисуем сверху междопутье-----------------------
             if (pointsFinalPunktir.Count > 1)
             {
+
+                CommonMethods methods = new CommonMethods();
+
                 for (int i = 0; i < pointsFinalPunktir.Count - 1; ++i)
                 {
                     DBPoint mp1point = (DBPoint)Trans.GetObject(pointsFinalPunktir[i], OpenMode.ForWrite);
@@ -1295,7 +1288,9 @@ namespace UsefulFunctionsNCad23.CadCommands
                     allPoperEnts.Add(nakLine2.ObjectId);
                     //-----ставим текст величины междопутья-------
 
-                    double mpDist = Class1.Vychisli_S(mp1point.Position, mp2point.Position) / horizScaleKoef;
+
+
+                    double mpDist = methods.Vychisli_S(mp1point.Position, mp2point.Position) / horizScaleKoef;
                     String mpString = mpDist.ToString("0.00", CultureInfo.InvariantCulture);
                     DBText mpText = new DBText();
                     mpText.TextString = mpString;
