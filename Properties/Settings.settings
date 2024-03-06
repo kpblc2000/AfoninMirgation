@@ -1,0 +1,61 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Useful_FunctionsCsh.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Горизонтальный_масштаб" Type="System.String" Scope="User">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
+    <Setting Name="AcceptReturn" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ВертикальныйМасштаб" Type="System.String" Scope="User">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
+    <Setting Name="ВысотаТекстаПопера" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="ВысотаТекстаЛегенды" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2.5
+</Value>
+    </Setting>
+    <Setting Name="Enter_text_data" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Ввод текстовых данных</Value>
+    </Setting>
+    <Setting Name="ВысотаИмениПоперечника" Type="System.String" Scope="User">
+      <Value Profile="(Default)">3.5</Value>
+    </Setting>
+    <Setting Name="Заглубление_код_120" Type="System.String" Scope="User">
+      <Value Profile="(Default)">-0.8</Value>
+    </Setting>
+    <Setting Name="Заглубление_каб" Type="System.String" Scope="User">
+      <Value Profile="(Default)">-1.70</Value>
+    </Setting>
+    <Setting Name="Превышение_ЛЭП" Type="System.String" Scope="User">
+      <Value Profile="(Default)">3.0</Value>
+    </Setting>
+    <Setting Name="Превышение_ВХ" Type="System.String" Scope="User">
+      <Value Profile="(Default)">0.15</Value>
+    </Setting>
+    <Setting Name="Создать_междопутья" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Создавать междопутья</Value>
+    </Setting>
+    <Setting Name="Слой_междопутий" Type="System.String" Scope="User">
+      <Value Profile="(Default)">39</Value>
+    </Setting>
+    <Setting Name="Высота_междопутий" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.6</Value>
+    </Setting>
+    <Setting Name="Стиль_текста" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ATP</Value>
+    </Setting>
+    <Setting Name="СозданиеТочекНаПересечениях" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Создавать точки на пересечениях при интерполяции</Value>
+    </Setting>
+    <Setting Name="СоздаватьТочкиИнтерполяция" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ЧекСтэйт" Type="System.Windows.Forms.CheckState" Scope="User">
+      <Value Profile="(Default)">Checked</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
