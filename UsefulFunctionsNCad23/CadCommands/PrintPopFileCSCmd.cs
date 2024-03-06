@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Useful_FunctionsCsh;
 
 #if NCAD
 using HostMgd.ApplicationServices;
@@ -7,6 +8,7 @@ using HostMgd.EditorInput;
 using Teigha.Colors;
 using Teigha.DatabaseServices;
 using Teigha.Runtime;
+using Teigha.Geometry;
 #elif ACAD
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
@@ -252,5 +254,23 @@ namespace UsefulFunctionsNCad23.CadCommands
             }
         } //end sub
 
+        private static bool point_is_vertex(Point3d myPoint3D, Polyline3d myPolyline3D, Transaction Trans)
+        {
+            bool popal = false;
+
+            foreach (ObjectId acObjIdVert in myPolyline3D) //перебираем каждую вершину 3-д полилинии,
+                //это делается как ObjectId в 3-д полилинии
+            {
+
+                PolylineVertex3d Vert = (PolylineVertex3d)Trans.GetObject(acObjIdVert, OpenMode.ForRead);
+                {
+                    if ((Vert.Position.X == myPoint3D.X) && (Vert.Position.Y == myPoint3D.Y))
+                    {
+                        popal = true; break;
+                    }
+                }
+            }
+            return popal;
+        }
     }
 }

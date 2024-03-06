@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+
 
 #if NCAD
 using HostMgd.ApplicationServices;
@@ -1068,6 +1070,103 @@ namespace UsefulFunctionsNCad23.CadCommands
             }
             return KodTochkiPopera;
         }//end function
+
+        private static void SdelayMPtexts(Point3dCollection SortPointsGRcol, string textMP_style, double textMP_height, string textMP_layer)
+        {
+
+            //метод создает тексты междопутий. Нужный слой уже создан в базе (перед выызовом процедуры).
+            BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
+            BlockTableRecord acBlkTblRec;
+            //  DocumentLock docklock = doc.LockDocument(DocumentLockMode.ExclusiveWrite,null,null,true);
+            using (Transaction Trans = db.TransactionManager.StartTransaction()) // начинаем транзакцию
+            {
+                try //начинаем обработку с блоком конструкцией улавливания ошибок
+                {
+                    //Если есть указанный стиль в базе, то делать им.
+                    acBlkTbl = (BlockTable)Trans.GetObject(db.BlockTableId, OpenMode.ForRead, false, true);      //открываем для чтения класс BlockTable
+                    acBlkTblRec = Trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false, true) as BlockTableRecord;//теперь мы получили доступ к пространству модели
+                    //сначала получаем примерное положение текста посередине между точками коллекции
+                    for (int i = 0; i < SortPointsGRcol.Count - 1; ++i)
+                    {
+                        Point3d point3D_1 = SortPointsGRcol[i];
+                        Point3d point3D_2 = SortPointsGRcol[i + 1];
+                        Point3d point_ins_MPtext = get_middle_point3D(point3D_1, point3D_2);//находим среднюю точку с помощью вспомогательной функции
+                        ed.WriteMessage("Функция \"get_middle_point3D\" для середины междопутья отработала  успешно\n");
+                        //для создания красивого текста междопутья осталось узнать угол поворота текста и его содержимое (расстояние между точками)
+                        double text_MP_angle = get_angle_90(point3D_1, point3D_2);
+                        ed.WriteMessage("Функция \"get_angle_90\" отработала успешно\n");
+                        double text_MP_rasst = Vychisli_S(point3D_1, point3D_2);
+                        string text_MP_string = text_MP_rasst.ToString("0.00", CultureInfo.InvariantCulture);//задаем содержимое правильного формата
+                                                                                                             //все исходные данные известны, создаем текст в примерном положении и добавляем его в базу чертежа
+                        TextStyleTable textStyleTableDoc = (TextStyleTable)Trans.GetObject(db.TextStyleTableId, OpenMode.ForRead, false, true);//открываем для чтения таблицу стилей текста
+                        String sStyleName = textMP_style;
+
+                        if (textStyleTableDoc.Has(sStyleName))
+                        {
+                            db.Textstyle = textStyleTableDoc[sStyleName];
+
+                        }
+
+                        DBText text_MP = new DBText();
+                        acBlkTblRec.AppendEntity(text_MP);
+                        Trans.AddNewlyCreatedDBObject(text_MP, true);
+                        ed.WriteMessage($"Текст без содержимого создан  успешно\n");
+                        //устанавливаем текущим стиль текста, переданный в функции, если он есть в базе чертежа
+
+                        text_MP.TextString = text_MP_string;
+                        text_MP.Rotation = text_MP_angle;
+                        text_MP.Position = point_ins_MPtext;
+                        text_MP.Layer = textMP_layer;
+                        text_MP.Height = textMP_height;
+                        text_MP.ColorIndex = 256;
+                        text_MP.LineWeight = LineWeight.ByLayer;
+
+                        //теперь перемещаем созданный текст, чтобы он был левее линии поперечника, и его середина была посередине линии
+                        Vector3d myVector = text_MP.GeometricExtents.MinPoint.GetVectorTo(text_MP.Position);
+                        text_MP.TransformBy(Matrix3d.Displacement(myVector));
+                        Point3d middle_box = get_middle_point3D(text_MP.GeometricExtents.MaxPoint, text_MP.Position);
+                        myVector = middle_box.GetVectorTo(text_MP.Position);
+                        text_MP.TransformBy(Matrix3d.Displacement(myVector));
+
+                        if (text_MP.TextStyleName == "ATP")
+                        {
+                            text_MP.Oblique = 0.2618;
+                            text_MP.WidthFactor = 0.8;
+                        }
+                    }
+
+                    Trans.Commit();
+
+                }
+#if NCAD
+                catch (Teigha.Runtime.Exception ex)
+#else
+                catch (Autodesk.AutoCAD.Runtime.Exception ex)
+#endif
+                {
+                    ed.WriteMessage($"В процессе работы команды \"SdelayMPtexts\" обнаружена ошибка: {ex.Message}\n");
+                    Trans.Abort();
+                }
+                catch (System.Exception ex)
+                {
+                    ed.WriteMessage($"В процессе работы команды \"SdelayMPtexts\" обнаружена ошибка: {ex.Message}\n");
+                    Trans.Abort();
+                }
+            }
+
+        }
+
+        private static double get_angle_90(Point3d point3D_1, Point3d point3D_2)
+        {
+            double angle_90 = 0;
+            using (Line myLine = new Line())
+            {
+                myLine.StartPoint = point3D_1;
+                myLine.EndPoint = point3D_2;
+                angle_90 = myLine.Angle + 1.5708;
+            }
+            return angle_90;
+        }
 
 
     }

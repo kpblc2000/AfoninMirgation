@@ -1,5 +1,9 @@
 ﻿
 using System;
+using HostMgd.ApplicationServices;
+
+using System.Windows.Controls;
+
 #if NCAD
 using HostMgd.EditorInput;
 using Teigha.DatabaseServices;
@@ -964,7 +968,6 @@ namespace UsefulFunctionsNCad23.Infrastructure
             }
             //  return modified_Polyline;
         }
-
         public double Vychisli_LomDlinu(Polyline3d myPolyline3d, Point3d myPoint, Point3d zeroPoint)
         {
             double LomDlina = 0;
@@ -1027,6 +1030,119 @@ namespace UsefulFunctionsNCad23.Infrastructure
             }
             return LomDlina;
         }//end function
+
+        public double Vychisli_LomDlinu_Poly(Polyline myPolyline, Point3d myPoint, Point3d zeroPoint)
+        {
+            BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
+            BlockTableRecord acBlkTblRec;
+            double LomDlina = 0;
+            DocumentLock docklock = doc.LockDocument();
+
+            Point3dCollection myPoint3DCollection = new Point3dCollection();//создаем вспомогательную коллекцию, куда будем
+                                                                            //кидать каждую точку анализируемой 3-д полилинии
+
+
+
+            using (Transaction Trans = db.TransactionManager.StartTransaction()) // начинаем транзакцию
+            {
+                acBlkTbl = (BlockTable)Trans.GetObject(db.BlockTableId, OpenMode.ForRead, false, true);      //открываем для чтения класс BlockTable
+                acBlkTblRec = Trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false, true) as BlockTableRecord;
+                try
+                {
+
+                    Point3d polyPoint3D;
+
+                    for (int i = 0; i < myPolyline.NumberOfVertices; i++)
+                    {
+                        polyPoint3D = myPolyline.GetPoint3dAt(i);
+                        myPoint3DCollection.Add(polyPoint3D);
+
+                    }
+
+                    // ed.WriteMessage($"\nВ общую коллекцию считано {myPoint3DCollection.Count} вершин\n");
+
+                    Point3dCollection lomPoint3DCollection = new Point3dCollection();
+
+                    int stInd = 0, finInd = 0;
+                    if (myPoint3DCollection.IndexOf(myPoint) < myPoint3DCollection.IndexOf(zeroPoint))
+                    {
+                        stInd = myPoint3DCollection.IndexOf(myPoint);
+                        finInd = myPoint3DCollection.IndexOf(zeroPoint);
+                        // ed.WriteMessage($"Выполняется первое условие, {stInd}, {finInd}\n");
+                    }
+                    if (myPoint3DCollection.IndexOf(zeroPoint) < myPoint3DCollection.IndexOf(myPoint))
+                    {
+                        stInd = myPoint3DCollection.IndexOf(zeroPoint);
+                        finInd = myPoint3DCollection.IndexOf(myPoint);
+                        // ed.WriteMessage($"Выполняется второе условие, {stInd}, {finInd}\n");
+                    }
+
+                    int j;
+                    for (j = stInd; j <= finInd; j++)
+                    {
+                        Point3d addPoint = new Point3d(myPoint3DCollection[j].X, myPoint3DCollection[j].Y, 0);
+                        lomPoint3DCollection.Add(addPoint);
+                    }
+                    // ed.WriteMessage($"В коллекцию ломаной линии считано {lomPoint3DCollection.Count} вершин\n");
+                    Polyline3d lomLine = new Polyline3d(Poly3dType.SimplePoly, lomPoint3DCollection, false);
+                    //  acBlkTblRec.AppendEntity(lomLine);
+                    //  Trans.AddNewlyCreatedDBObject(lomLine, true);
+                    LomDlina = lomLine.Length;
+
+                    Trans.Commit();
+                    lomLine.Dispose();
+                    docklock.Dispose();
+                }
+#if NCAD
+                catch (Teigha.Runtime.Exception ex)
+#else
+                catch (Autodesk.AutoCAD.Runtime.Exception ex)
+#endif
+                {
+                    ed.WriteMessage($"В процессе вычисления длины ломаной возникла ошибка: \n{ex}");
+                    Trans.Abort();
+                }
+                catch (System.Exception ex1)
+                {
+                    ed.WriteMessage($"В процессе вычисления длины ломаной возникла ошибка: \n{ex1}");
+                    Trans.Abort();
+                }
+            }
+
+            return LomDlina;
+        }//end function
+
+        public double Vychisli_Z(Point3d p1, Point3d p2, Point3d p3)
+        {
+            Line line1 = new Line(new Point3d(p1.X, p1.Y, 0), new Point3d(p2.X, p2.Y, 0));
+            Line line2 = new Line(new Point3d(p2.X, p2.Y, 0), new Point3d(p3.X, p3.Y, 0));
+            double S1 = line1.Length;
+            double S2 = line2.Length;
+            double Hfull = p3.Z - p1.Z;
+            double Spol = S1 + S2;
+            double TanA = Hfull / Spol;
+            double H1 = S1 * TanA;
+            line1.Dispose();
+            line2.Dispose();
+            return H1;
+        }
+        public PromptEntityResult select_Entity(Type myType, String myMessage)
+        {
+            PromptEntityOptions promptPointoptions = new PromptEntityOptions(myMessage + "\n");
+            promptPointoptions.SetRejectMessage($"Выбран объект не {myType}!\n");
+            promptPointoptions.AllowNone = false;
+            promptPointoptions.AddAllowedClass(myType, true);
+            PromptEntityResult promptResult_1 = ed.GetEntity(promptPointoptions);
+            if (promptResult_1.Status == PromptStatus.OK)
+            {
+                return promptResult_1;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
 
         private bool point_inside_face(Point3d anyPoint3D, Face anyFace)
         {
@@ -1292,6 +1408,32 @@ namespace UsefulFunctionsNCad23.Infrastructure
             //ed.WriteMessage($"Получена точка с отметкой {myZ}\n");
             return new Point3d(anyPoint3D.X, anyPoint3D.Y, myZ);
         }
+
+        private Point3d get_middle_point3D(Point3d point3D_1, Point3d point3D_2)
+        {
+            double dX = point3D_2.X - point3D_1.X;
+            double dY = point3D_2.Y - point3D_1.Y;
+            double dZ = point3D_2.Z - point3D_1.Z;
+            Point3d middle_point3D = new Point3d(point3D_1.X + 0.5 * dX, point3D_1.Y + 0.5 * dY, point3D_1.Z + 0.5 * dZ);
+            return middle_point3D;
+        }
+
+        private bool is_point_in_Current_Vertex(Point3d point, Polyline polyline)
+        {
+            bool point_vertex = false;
+            for (int i = 0; i < polyline.NumberOfVertices; ++i)
+            {
+                Point3d vertPoint = polyline.GetPoint3dAt(i);
+                if (vertPoint == point)
+                {
+                    point_vertex = true;
+                    break;
+                }
+            }
+            return point_vertex;
+        }
+
+    
 
     }
 }
