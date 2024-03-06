@@ -268,7 +268,7 @@ namespace UsefulFunctionsNCad23.CadCommands
                             //finalCol.Clear();
 
                         }//конец блока try перед catch         
-                        catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                        catch (System.Exception ex)
                         //в случае обнаружения ошибки пишем её описание и прерываем транзакцию
 
                         {
@@ -288,6 +288,787 @@ namespace UsefulFunctionsNCad23.CadCommands
 
 
         }
+
+        private static void SozdaniePodpisiTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine)
+        {
+            // BlockTable acBlkTbl;   //объявляем переменные для базы с примитивами чертежа 
+            //BlockTableRecord acBlkTblRec;
+            TypedValue[] TvOpisanie = new TypedValue[2];
+            TvOpisanie.SetValue(new TypedValue((int)(DxfCode.Start), "TEXT"), 0);
+            TvOpisanie.SetValue(new TypedValue((int)(DxfCode.LayerName), "подписи поперечников"), 1);
+            SelectionFilter filterOpisanie = new SelectionFilter(TvOpisanie);
+            PromptSelectionResult resultOpisanie = ed.SelectAll(filterOpisanie);
+            SelectionSet poperOpisanie = resultOpisanie.Value;
+            DBText TryOpisanie = new DBText();
+            using (Transaction Trans1 = db.TransactionManager.StartTransaction())
+            {
+                // acBlkTbl = (BlockTable)Trans1.GetObject(db.BlockTableId, OpenMode.ForRead, false, true);      //открываем для чтения класс BlockTable
+                //  acBlkTblRec = Trans1.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite, false, true) as BlockTableRecord;
+                if (poperOpisanie is null)
+                {
+                    //return;
+                    goto метка2;
+                }
+                foreach (SelectedObject ObjOpisanie in poperOpisanie)
+                {
+                    TryOpisanie = Trans1.GetObject(ObjOpisanie.ObjectId, OpenMode.ForWrite, false, false) as DBText; //System.InvalidOperationException: "Операция является недопустимой из-за текущего состояния объекта."
+
+                    if (Math.Round(TryOpisanie.Position.X, 2) == PopPointWithH.X & Math.Round(TryOpisanie.Position.Y, 2) == PopPointWithH.Y)
+                    {
+                        return;
+                    }  //End If
+                } //Next
+            метка2: String StrOpisanie = SdelayOpisanieTochkiPopera_3(popent, Trans1);
+                DBText TxtOpisanie = new DBText();
+                //With TxtOpisanie
+                TxtOpisanie.TextString = StrOpisanie;
+                TxtOpisanie.Position = PopPointWithH;
+                TxtOpisanie.Layer = "подписи поперечников";
+                TxtOpisanie.Justify = AttachmentPoint.BaseLeft;
+                TxtOpisanie.Rotation = MyLine.Angle + 1.5708;
+                TxtOpisanie.Height = 0.5;
+                TxtOpisanie.ColorIndex = 190;
+                TxtOpisanie.LineWeight = (LineWeight)0.3;
+                //End With
+                acBlkTblRec.AppendEntity(TxtOpisanie);
+                Trans1.AddNewlyCreatedDBObject(TxtOpisanie, true);
+                Trans1.Commit();
+
+
+            }//end using
+            TryOpisanie.Dispose();
+        }//end sub
+
+        private static Point3dCollection delete_dubles(Point3dCollection point3DCollection_with_doubles)
+        {
+            bool hasDubls = true;
+            while (hasDubls)
+            {
+                int countDel = 0;
+                for (int dublInd = 0; dublInd < point3DCollection_with_doubles.Count - 1; dublInd++)
+                {
+
+                    //for (int k = 1;k< SortCol.Count;k++)
+                    //{
+                    double dubleDist = Vychisli_S(point3DCollection_with_doubles[dublInd], point3DCollection_with_doubles[dublInd + 1]);
+
+                    if (dubleDist < 0.01)
+                    {
+                        point3DCollection_with_doubles.RemoveAt(dublInd + 1);
+                        countDel++;
+                    }
+                    //}
+                }
+                if (countDel == 0)
+                {
+                    hasDubls = false;
+                }
+            }
+            return point3DCollection_with_doubles;
+        }
+
+        private static Point3dCollection SortPoint3dCollection(Point3dCollection GotovyPoper3dCol)
+        {
+            Point3dCollection SortCol = new Point3dCollection();
+            int i, j;
+            double S1;
+            double[] ArrayOfDist = new double[GotovyPoper3dCol.Count];
+            int[] ArrayOfIndex = new int[GotovyPoper3dCol.Count];
+            using (Transaction Trans = db.TransactionManager.StartTransaction()) // начинаем транзакцию
+            {
+                try
+                {
+                    for (i = 0; i <= GotovyPoper3dCol.Count - 1; i++)
+                    {
+                        S1 = Vychisli_S(GotovyPoper3dCol[0], GotovyPoper3dCol[i]);
+                        ArrayOfDist.SetValue(S1, i);
+                        ArrayOfIndex.SetValue(i, i);
+                    } //Next
+                    Array.Sort(ArrayOfDist, ArrayOfIndex);
+                    for (j = 0; j <= GotovyPoper3dCol.Count - 1; j++)
+                    {
+                        SortCol.Add(GotovyPoper3dCol[ArrayOfIndex[j]]);
+                    } //Next
+
+
+                }
+                catch (System.Exception ex)
+                {
+
+                    ed.WriteMessage("\nЧто-то пошло не так...." + ex.Message);
+                } //End Try 
+            } //End Using
+            return SortCol;
+        } //End Function
+
+        private static void SozdanieKodaTochkiPopera(BlockTableRecord acBlkTblRec, Point3d PopPointWithH, Entity popent, Line MyLine)
+        {
+            TypedValue[] TvKod = new TypedValue[2];
+            TvKod.SetValue(new TypedValue((int)(DxfCode.Start), "TEXT"), 0);
+            TvKod.SetValue(new TypedValue((int)(DxfCode.LayerName), "коды поперечников"), 1);
+            SelectionFilter filterKod = new SelectionFilter(TvKod);
+            PromptSelectionResult resultKod = ed.SelectAll(filterKod);
+            SelectionSet poperKod = resultKod.Value;
+            DBText TryKod = new DBText();
+            using (Transaction Trans2 = db.TransactionManager.StartTransaction())
+
+            {
+                if (poperKod is null)
+                {
+                    goto метка3;
+                }
+                else
+                {
+                    foreach (SelectedObject ObjKod in poperKod)
+                    {
+                        TryKod = Trans2.GetObject(ObjKod.ObjectId, OpenMode.ForWrite, false, false) as DBText;
+                        if ((Math.Round(TryKod.Position.X, 2) == PopPointWithH.X) & (Math.Round(TryKod.Position.Y, 2) == PopPointWithH.Y))
+                        {
+                            return;
+                        }//end if
+                    }                         //Next
+
+                }   // End If                  
+
+            метка3: TypedValue[] TvVspomPoint = new TypedValue[2];
+                TvVspomPoint.SetValue(new TypedValue((int)(DxfCode.Start), "POINT"), 0);
+                TvVspomPoint.SetValue(new TypedValue((int)(DxfCode.LayerName), "коды поперечников,подписи поперечников"), 1);
+                SelectionFilter filterVspomPoint = new SelectionFilter(TvVspomPoint);
+                PromptSelectionResult resultVspomPoint = ed.SelectAll(filterVspomPoint);
+                SelectionSet poperVspomPoint = resultVspomPoint.Value;
+                Point3dCollection poperVspomPointCol = new Point3dCollection();
+                Boolean TryVspomPoint;
+                if (poperVspomPoint is null)
+                {
+                    TryVspomPoint = false;
+                }
+                else
+                {
+                    foreach (SelectedObject VspomPointObj in poperVspomPoint)
+                    {
+                        DBPoint VspomPoint = Trans2.GetObject(VspomPointObj.ObjectId, OpenMode.ForWrite, false, false) as DBPoint;
+                        poperVspomPointCol.Add(VspomPoint.Position);
+                    } //Next
+                    TryVspomPoint = ProveritNalichieTochki(poperVspomPointCol, PopPointWithH);
+                } //End If
+                String StrKod = SdelayKodTochkiPopera(popent, Trans2, TryVspomPoint);
+                DBText AddKod = new DBText();
+                AddKod.TextString = StrKod;
+                AddKod.Position = PopPointWithH;
+                AddKod.Layer = "коды поперечников";
+                AddKod.Justify = AttachmentPoint.BaseLeft;
+                AddKod.Rotation = MyLine.Angle + 1.5708 + 1.5708;
+                AddKod.Height = 0.5;
+                AddKod.ColorIndex = 210;
+                AddKod.LineWeight = (LineWeight)0.3;
+                acBlkTblRec.AppendEntity(AddKod);
+                Trans2.AddNewlyCreatedDBObject(AddKod, true);
+                Trans2.Commit();
+            }//end using
+            TryKod.Dispose();
+        }//end sub
+
+        private static bool ProveritNalichieTochki(Point3dCollection myPoint3dCol, Point3d myPoint3d)
+        {
+            bool myBool = new bool();
+            foreach (Point3d Vertpoint3d in myPoint3dCol)
+            {
+                if (Vertpoint3d.X == myPoint3d.X & Vertpoint3d.Y == myPoint3d.Y)
+                {
+                    myBool = true;
+                } //End If
+                else
+                {
+                    myBool = false;
+                }
+            } //Next
+            return myBool;
+        } //End Function
+
+        private static string SdelayKodTochkiPopera(Entity popent, Transaction Trans, bool TryVspomPoint)
+        {
+            string KodTochkiPopera = "0";
+            //'в зависимости от того, с каким entity идет пересечение - создаем набор кодов по-умолчанию
+            switch (popent.GetType().ToString())
+            {
+#if NCAD
+                case "Teigha.DatabaseServices.Polyline":
+#else
+                case "Autodesk.AutoCAD.DatabaseServices.Polyline":
+#endif
+                    using (Polyline ProverkaPolyLine = Trans.GetObject(popent.ObjectId, OpenMode.ForRead) as Polyline)
+                    {
+                        switch (ProverkaPolyLine.Layer)
+                        {
+                            case "1":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "3":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "4":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "5":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "6":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "7":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "8":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+
+                            case "10":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "13":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "14":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "2":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "131";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "130";
+                                        break;
+
+                                }
+                                break;
+                            case "12":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "141";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "140";
+                                        break;
+                                }
+                                break;
+                            case "29":
+                                KodTochkiPopera = "1";
+                                break;
+                            case "23":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_472":
+                                        KodTochkiPopera = "4";
+                                        break;
+                                    case "atp_473":
+                                        KodTochkiPopera = "5";
+                                        break;
+                                    case "atp_474_1b":
+                                        KodTochkiPopera = "6";
+                                        break;
+                                    case "atp_474_2a":
+                                        KodTochkiPopera = "7";
+                                        break;
+                                    case "atp_475_1":
+                                        KodTochkiPopera = "8";
+                                        break;
+                                    case "atp_476_3":
+                                        KodTochkiPopera = "9";
+                                        break;
+                                }
+                                break;
+                            case "20":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_280_1":
+                                        KodTochkiPopera = "10";
+                                        break;
+                                }
+                                break;
+                        }
+                        break;
+
+                    } //end using
+#if NCAD
+                case "Teigha.DatabaseServices.Line":
+#else
+                case "Autodesk.AutoCAD.DatabaseServices.Line":
+#endif
+                    using (Line ProverkaPolyLine = Trans.GetObject(popent.ObjectId, OpenMode.ForRead) as Line)
+                    {
+                        switch (ProverkaPolyLine.Layer)
+                        {
+                            case "1":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "3":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "4":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "5":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "6":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "7":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "8":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+
+                            case "10":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "13":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "14":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "2":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "131";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "130";
+                                        break;
+
+                                }
+                                break;
+                            case "12":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "131";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "130";
+                                        break;
+                                }
+                                break;
+                            case "29":
+                                KodTochkiPopera = "1";
+                                break;
+                            case "23":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_472":
+                                        KodTochkiPopera = "4";
+                                        break;
+                                    case "atp_473":
+                                        KodTochkiPopera = "5";
+                                        break;
+                                    case "atp_474_1b":
+                                        KodTochkiPopera = "6";
+                                        break;
+                                    case "atp_474_2a":
+                                        KodTochkiPopera = "7";
+                                        break;
+                                    case "atp_475_1":
+                                        KodTochkiPopera = "8";
+                                        break;
+                                    case "atp_476_3":
+                                        KodTochkiPopera = "9";
+                                        break;
+                                }
+                                break;
+                            case "20":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_280_1":
+                                        KodTochkiPopera = "10";
+                                        break;
+                                }
+                                break;
+                        }
+                        break;
+
+
+
+                    }
+#if NCAD
+                case "Teigha.DatabaseServices.Spline":
+#else
+                case "Autodesk.AutoCAD.DatabaseServices.Spline":
+#endif
+                    using (Spline ProverkaPolyLine = Trans.GetObject(popent.ObjectId, OpenMode.ForRead) as Spline)
+                    {
+                        switch (ProverkaPolyLine.Layer)
+                        {
+                            case "1":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "3":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "4":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "5":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "6":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "7":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "8":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+
+                            case "10":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "13":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "14":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "121";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "120";
+                                        break;
+
+                                }
+                                break;
+                            case "2":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "131";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "130";
+                                        break;
+
+                                }
+                                break;
+                            case "12":
+                                switch (TryVspomPoint.ToString())
+                                {
+                                    case "True":
+                                        KodTochkiPopera = "131";
+                                        break;
+                                    case "False":
+                                        KodTochkiPopera = "130";
+                                        break;
+                                }
+                                break;
+                            case "29":
+                                KodTochkiPopera = "1";
+                                break;
+                            case "23":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_472":
+                                        KodTochkiPopera = "4";
+                                        break;
+                                    case "atp_473":
+                                        KodTochkiPopera = "5";
+                                        break;
+                                    case "atp_474_1b":
+                                        KodTochkiPopera = "6";
+                                        break;
+                                    case "atp_474_2a":
+                                        KodTochkiPopera = "7";
+                                        break;
+                                    case "atp_475_1":
+                                        KodTochkiPopera = "8";
+                                        break;
+                                    case "atp_476_3":
+                                        KodTochkiPopera = "9";
+                                        break;
+                                }
+                                break;
+                            case "20":
+                                switch (ProverkaPolyLine.Linetype)
+                                {
+                                    case "atp_280_1":
+                                        KodTochkiPopera = "10";
+                                        break;
+                                }
+                                break;
+                        }
+                        break;
+                    }
+            }
+            return KodTochkiPopera;
+        }//end function
+
 
     }
 }

@@ -7,6 +7,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.EditorInput;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 #endif
+using System;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
@@ -32,6 +33,12 @@ namespace UsefulFunctionsNCad23.Infrastructure
         {
             MessageBox.Show(string.IsNullOrWhiteSpace(CallMethod) ? "" : $"{CallMethod} : " + Message, "Информация",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        public void ExceptionMessage(Exception ex, [CallerMemberName] string CallMethod = null)
+        {
+            MessageBox.Show((string.IsNullOrWhiteSpace(CallMethod) ? "" : $"{CallMethod} : ") + Message,
+                "Системная ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

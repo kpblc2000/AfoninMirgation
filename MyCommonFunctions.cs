@@ -38,18 +38,6 @@ namespace Useful_FunctionsCsh
 {
     public class MyCommonFunctions
     {
-        //static Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-        // static Editor ed = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
-        // static Database db = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Database;
-#if NCAD
-     static   Document doc = HostMgd.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-      static  Editor ed = HostMgd.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
-      static  Database db = HostMgd.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
-#else
-        static Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-        static Editor ed = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
-        static Database db = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Database;
-#endif
 
         public static double Vychisli_LomDlinu_Poly(Polyline myPolyline, Point3d myPoint, Point3d zeroPoint)
         {

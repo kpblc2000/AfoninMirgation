@@ -147,5 +147,23 @@ namespace UsefulFunctionsNCad23.CadCommands
             docklock.Dispose();
         }
 
+        private static int find_addvertex_index(Polyline myPolyline, Point3d addedPoint)
+        {
+            //функция возвращает индекс вершины,
+            //перед которой можно вставить в полилинию проверяемую точку, чтобы она не "перекрутилась" (по порядку)
+            int numer = 0;
+            for (int i = 0; i < myPolyline.NumberOfVertices - 1; ++i)
+            {
+
+                double S1 = Vychisli_S(myPolyline.GetPoint3dAt(i), myPolyline.GetPoint3dAt(i + 1));
+                double S2 = Vychisli_S(myPolyline.GetPoint3dAt(i), addedPoint);
+                if (S2 <= S1)
+                {
+                    numer = i + 1; break;
+                }
+            }
+            return numer;
+        }
+
     }
 }

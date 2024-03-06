@@ -98,8 +98,34 @@
     <Compile Include="..\UsefulFunctionsNCad23\Infrastructure\MessageService.cs">
       <Link>Infrastructure\MessageService.cs</Link>
     </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\Views\Form1.cs">
+      <Link>Views\Form1.cs</Link>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\Views\Form1.Designer.cs">
+      <Link>Views\Form1.Designer.cs</Link>
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\Views\Form2.cs">
+      <Link>Views\Form2.cs</Link>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\Views\Form2.Designer.cs">
+      <Link>Views\Form2.Designer.cs</Link>
+      <DependentUpon>Form2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="..\UsefulFunctionsNCad23\Views\Form1.resx">
+      <Link>Views\Form1.resx</Link>
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\UsefulFunctionsNCad23\Views\Form2.resx">
+      <Link>Views\Form2.resx</Link>
+      <DependentUpon>Form2.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
