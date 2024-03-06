@@ -50,6 +50,51 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\create_point3D_on_each_vertexCmd.cs">
+      <Link>CadCommands\create_point3D_on_each_vertexCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\create_point3D_on_FaceCmd.cs">
+      <Link>CadCommands\create_point3D_on_FaceCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\DlinaLomanoiCmd.cs">
+      <Link>CadCommands\DlinaLomanoiCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\group_intersectionCmd.cs">
+      <Link>CadCommands\group_intersectionCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\InterpolCmd.cs">
+      <Link>CadCommands\InterpolCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\Make_DescriptionCmd.cs">
+      <Link>CadCommands\Make_DescriptionCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\PrintPopFileCSCmd.cs">
+      <Link>CadCommands\PrintPopFileCSCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\Sdelay_PoperCSCmd.cs">
+      <Link>CadCommands\Sdelay_PoperCSCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\Sdelay_ZeroCmd.cs">
+      <Link>CadCommands\Sdelay_ZeroCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\ShowPoperToolsCmd.cs">
+      <Link>CadCommands\ShowPoperToolsCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\StartUFCshCmd.cs">
+      <Link>CadCommands\StartUFCshCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\TestLomDlinaCmd.cs">
+      <Link>CadCommands\TestLomDlinaCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\Test_IntersectionCmd.cs">
+      <Link>CadCommands\Test_IntersectionCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\Test_Risui_PoperCmd.cs">
+      <Link>CadCommands\Test_Risui_PoperCmd.cs</Link>
+    </Compile>
+    <Compile Include="..\UsefulFunctionsNCad23\CadCommands\test_Type_EntityCmd.cs">
+      <Link>CadCommands\test_Type_EntityCmd.cs</Link>
+    </Compile>
     <Compile Include="..\UsefulFunctionsNCad23\Infrastructure\MessageService.cs">
       <Link>Infrastructure\MessageService.cs</Link>
     </Compile>
